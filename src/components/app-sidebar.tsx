@@ -16,6 +16,8 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import darkLogo from "@/logos/white-esrefly.svg";
+import whiteLogo from "@/logos/esefly.svg";
 
 const items = [
   {
@@ -41,19 +43,9 @@ export function AppSidebar() {
         {/* LOGO */}
         <div className="grid place-content-center">
           {theme === "dark" ? (
-            <Image
-              alt="logo"
-              src={"/logos/white-esrefly.svg"}
-              width="180"
-              height="180"
-            />
+            <Image alt="logo" src={darkLogo} width="180" height="180" />
           ) : (
-            <Image
-              alt="logo"
-              src={"/logos/esefly.svg"}
-              width="180"
-              height="180"
-            />
+            <Image alt="logo" src={whiteLogo} width="180" height="180" />
           )}
         </div>
       </SidebarHeader>
