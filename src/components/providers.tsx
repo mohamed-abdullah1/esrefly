@@ -9,7 +9,7 @@ export default async function Providers({
     <LocalizationProvider>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
+        defaultTheme="dark"
         enableSystem
         disableTransitionOnChange
       >

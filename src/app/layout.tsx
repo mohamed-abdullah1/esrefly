@@ -3,6 +3,9 @@ import "./globals.css";
 import localFont from "next/font/local";
 import { getLocale } from "next-intl/server";
 import Providers from "@/components/providers";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import TopBar from "@/components/top-bar";
 
 const poppins = localFont({
   src: [
@@ -87,8 +90,18 @@ export default async function RootLayout({
         className={`${locale === "en" ? poppins.className : cairo.className}
         antialiased 
     `}
+        dir={locale === "en" ? "ltr" : "rtl"}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <SidebarProvider>
+            <AppSidebar />
+            <main>
+              <TopBar />
+
+              {children}
+            </main>
+          </SidebarProvider>
+        </Providers>
       </body>
     </html>
   );
