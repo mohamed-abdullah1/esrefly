@@ -1,16 +1,72 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import localFont from "next/font/local";
+import { getLocale } from "next-intl/server";
+import Providers from "@/components/providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const poppins = localFont({
+  src: [
+    {
+      path: "../fonts/poppins/Poppins-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../fonts/poppins/Poppins-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/poppins/Poppins-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../fonts/poppins/Poppins-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../fonts/poppins/Poppins-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    // Add more variants as needed
+  ],
+  variable: "--font-poppins",
+  display: "swap",
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const cairo = localFont({
+  src: [
+    {
+      path: "../fonts/cairo/Cairo-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../fonts/cairo/Cairo-Medium.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/cairo/Cairo-SemiBold.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../fonts/cairo/Cairo-Bold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../fonts/cairo/Cairo-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    // Add more variants as needed
+  ],
+  variable: "--font-cairo",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -18,24 +74,21 @@ export const metadata: Metadata = {
   description: "Your financial assistant",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${locale === "en" ? poppins.className : cairo.className}
+        antialiased 
+    `}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

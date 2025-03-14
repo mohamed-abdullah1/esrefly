@@ -105,4 +105,47 @@
   body {
     @apply bg-background text-foreground;
   }
+  .icon-btn-style {
+    @apply cursor-pointer relative p-3 rounded-full transition-all duration-200 
+    hover:bg-black/5 active:bg-black/10
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    transform active:scale-95;
+  }
+  .debug {
+    @apply border-red-400 border-4;
+  }
+  .container {
+    @apply max-w-[1990px] mx-auto px-4 sm:px-6 lg:px-8 overflow-clip py-12;
+  }
+}
+/* For Webkit browsers (Chrome, Safari, newer versions of Opera) */
+::-webkit-scrollbar {
+  width: 10px; /* Slightly wider for better visibility */
+  height: 10px;
+  border-radius: 20px; /* Increased border radius */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px; /* Increased border radius */
+  margin: 5px; /* Added margin for floating effect */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px; /* Increased border radius */
+  border: 3px solid transparent; /* Creates padding effect */
+  background-clip: padding-box; /* Ensures the border is transparent */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
 }
