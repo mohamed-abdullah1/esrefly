@@ -16,8 +16,6 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import darkLogo from "@/logos/white-esrefly.svg";
-import whiteLogo from "@/logos/esefly.svg";
 
 const items = [
   {
@@ -39,14 +37,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar side={isSiteArabic() ? "right" : "left"}>
-      <SidebarHeader className="py-6">
+      <SidebarHeader className="py-4">
         {/* LOGO */}
-        <div className="grid place-content-center">
-          {theme === "dark" ? (
-            <Image alt="logo" src={darkLogo} width="180" height="180" />
-          ) : (
-            <Image alt="logo" src={whiteLogo} width="180" height="180" />
-          )}
+        <div className="flex gap-2 items-center mx-auto">
+          <Image
+            alt="logo"
+            src={"/logos/small-esrefly.svg"}
+            width="60"
+            height="60"
+          />
+          <h1 className="text-4xl font-bold">SREFLY</h1>
         </div>
       </SidebarHeader>
       <SidebarGroupContent>
@@ -57,9 +57,7 @@ export function AppSidebar() {
                 asChild
                 className={cn(
                   "w-[90%] mx-2",
-                  pathname === item.url
-                    ? "bg-primary text-white"
-                    : " hover:bg-primary-500 hover:text-white"
+                  pathname === item.url ? "bg-primary text-white" : ""
                 )}
               >
                 <Link href={item.url}>
