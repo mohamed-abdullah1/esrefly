@@ -12,19 +12,19 @@ import { ROUTES } from "@/lib/enums";
 import isSiteArabic from "@/lib/is-site-arabic";
 import { cn } from "@/lib/utils";
 import { Home, MessageCircle } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
   {
-    title: "Home",
+    title: "home",
     url: ROUTES.MAIN,
     icon: Home,
   },
   {
-    title: "Chat",
+    title: "chat",
     url: ROUTES.CHAT,
     icon: MessageCircle,
   },
@@ -32,21 +32,19 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { theme } = useTheme();
-  console.log("🔥✨ ", { theme });
-
+  const t = useTranslations();
   return (
     <Sidebar side={isSiteArabic() ? "right" : "left"}>
       <SidebarHeader className="py-4">
         {/* LOGO */}
-        <div className="flex gap-2 items-center mx-auto">
+        <div className="flex gap-2 items-center mx-auto" dir="ltr">
           <Image
             alt="logo"
             src={"/logos/small-esrefly.svg"}
             width="60"
             height="60"
           />
-          <h1 className="text-4xl font-bold">SREFLY</h1>
+          <h1 className={cn("text-4xl font-bold", "font-[poppins]")}>SREFLY</h1>
         </div>
       </SidebarHeader>
       <SidebarGroupContent>
@@ -62,7 +60,7 @@ export function AppSidebar() {
               >
                 <Link href={item.url}>
                   <item.icon />
-                  <span>{item.title}</span>
+                  <span>{t(item.title)}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
