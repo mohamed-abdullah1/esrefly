@@ -1,5 +1,11 @@
 {
   "test": "Test",
   "home": "Home",
-  "chat": "Chat"
+  "chat": "Chat",
+  "from-last-month": "From last month",
+  "total-income": "Total income",
+  "total-expenses": "Total expenses",
+  "savings": "Savings",
+  "goal-progress": "Goals progress",
+  "goals-achieved": "Goals achieved"
 }

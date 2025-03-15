@@ -1,5 +1,11 @@
 {
-  "test": "Test",
+  "test": "اختبار",
   "home": "الرئيسية",
-  "chat": "المحادثة"
+  "chat": "الدردشة",
+  "from-last-month": "من الشهر الماضي",
+  "total-income": "إجمالي الدخل",
+  "total-expenses": "إجمالي المصروفات",
+  "savings": "الادخار",
+  "goal-progress": "تقدم الأهداف",
+  "goals-achieved": "الأهداف المحققة"
 }

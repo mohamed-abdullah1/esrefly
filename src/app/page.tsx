@@ -1,6 +1,9 @@
-import { useTranslations } from "next-intl";
+import HomeContainer from "./_components/home-container";
 
 export default function Home() {
-  const t = useTranslations();
-  return <main className="container mx-auto !py-0">{t("test")}</main>;
+  return (
+    <main className="container mx-auto !py-0">
+      <HomeContainer />
+    </main>
+  );
 }
