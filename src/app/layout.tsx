@@ -74,7 +74,11 @@ const cairo = localFont({
 
 export const metadata: Metadata = {
   title: "Esrefly",
-  description: "Your financial assistant",
+  description: "مساعدك المالي الجديد باستعمال الذكاء الاصطناعي",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL!),
+  openGraph: {
+    images: "/logo-esr.png",
+  },
 };
 
 export default async function RootLayout({
