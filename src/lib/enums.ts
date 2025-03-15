@@ -11,3 +11,9 @@ export enum ROUTES {
   MAIN = "/",
   CHAT = "/chat",
 }
+
+export enum TYPE {
+  INCOME = "INCOME",
+  EXPENSE = "EXPENSE",
+  GOAL = "GOAL",
+}

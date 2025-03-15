@@ -47,12 +47,12 @@ const cairo = localFont({
       style: "normal",
     },
     {
-      path: "../fonts/cairo/Cairo-Medium.ttf",
+      path: "../fonts/cairo/Cairo-SemiBold.ttf",
       weight: "400",
       style: "normal",
     },
     {
-      path: "../fonts/cairo/Cairo-SemiBold.ttf",
+      path: "../fonts/cairo/Cairo-Bold.ttf",
       weight: "500",
       style: "normal",
     },

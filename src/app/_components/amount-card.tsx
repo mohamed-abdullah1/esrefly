@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import format from "@/lib/currency";
 import isSiteArabic from "@/lib/is-site-arabic";
 
 interface AmountCardProps {
@@ -30,7 +31,9 @@ const AmountCard = ({
         <CardDescription></CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold">{amount}</p>
+        <p className="text-2xl font-semibold">
+          {amount.includes("%") ? amount : format(parseInt(amount))}
+        </p>
 
         <div
           className={`absolute top-5 ${isSiteArabic() ? "left-5" : "right-5"}`}

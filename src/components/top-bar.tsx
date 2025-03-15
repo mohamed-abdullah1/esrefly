@@ -11,10 +11,8 @@ const TopBar = () => {
     <header
       className={cn(
         "flex justify-between items-center p-4  ",
-        // "container-width"
-        !isMobile
-          ? `w-[calc(100vw-16rem)] max-w-[1990px] mx-auto `
-          : "w-[100vw]"
+        "sticky top-0 z-50 backdrop-blur bg-transparent overflow-clip",
+        !isMobile ? `w-[calc(100vw-18rem)] max-w-[1990px] mx-auto ` : "w-[97vw]"
       )}
     >
       {isMobile && <SidebarTrigger />}

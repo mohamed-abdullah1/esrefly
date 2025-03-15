@@ -1,6 +1,14 @@
 "use client";
+
+import React from "react";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Home, MessageCircle } from "lucide-react";
+import { ROUTES } from "@/lib/enums";
 import {
-  Sidebar,
   SidebarFooter,
   SidebarGroupContent,
   SidebarHeader,
@@ -8,14 +16,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { ROUTES } from "@/lib/enums";
-import isSiteArabic from "@/lib/is-site-arabic";
-import { cn } from "@/lib/utils";
-import { Home, MessageCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 const items = [
   {
@@ -30,11 +30,12 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+const SidebarContainer = () => {
   const pathname = usePathname();
   const t = useTranslations();
+
   return (
-    <Sidebar side={!isSiteArabic() ? "left" : "right"}>
+    <>
       <SidebarHeader className="py-4">
         {/* LOGO */}
         <div className="flex gap-2 items-center mx-auto" dir="ltr">
@@ -68,6 +69,8 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarGroupContent>{" "}
       <SidebarFooter />
-    </Sidebar>
+    </>
   );
-}
+};
+
+export default SidebarContainer;
