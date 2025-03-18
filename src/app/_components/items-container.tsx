@@ -18,16 +18,24 @@ import {
 import isSiteArabic from "@/lib/is-site-arabic";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { TYPE } from "@/lib/enums";
+import { formType, TYPE } from "@/lib/enums";
 import IncomeExpenseItem from "./income-expense-item";
 import { GoalDataType, IncomeDataType } from "@/lib/types";
 import GoalItem from "./goal-item";
+import React from "react";
+import { ExpenseItem } from "@/actions/expenses";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ItemsContainerProps {
   title: string;
-  formComponent: React.ReactNode;
-  data: IncomeDataType[] | GoalDataType[];
+  formComponent: (
+    type: formType,
+    expenseId?: string,
+    setModalOpen?: React.Dispatch<React.SetStateAction<boolean>>
+  ) => React.JSX.Element;
+  data: ExpenseItem[];
   type: TYPE;
+  isLoading: boolean;
 }
 
 const ItemsContainer = ({
@@ -35,8 +43,12 @@ const ItemsContainer = ({
   formComponent,
   data,
   type,
+  isLoading,
 }: ItemsContainerProps) => {
   const t = useTranslations();
+  const [modalOpen, setModalOpen] = React.useState(false);
+  console.log("🔥✨ DATA", data);
+
   return (
     <Card className="w-full relative">
       <CardHeader>
@@ -44,7 +56,7 @@ const ItemsContainer = ({
         <CardDescription></CardDescription>
       </CardHeader>
       <CardContent>
-        <Dialog>
+        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
           <DialogTrigger>
             <Button
               className={`absolute top-5 rounded-full text-white ${
@@ -59,20 +71,30 @@ const ItemsContainer = ({
             <DialogHeader>
               <DialogTitle className="sr-only">{title}</DialogTitle>
               <DialogDescription className="sr-only"></DialogDescription>
-              {formComponent}
+              <div>{formComponent(formType.add, undefined, setModalOpen)}</div>
             </DialogHeader>
           </DialogContent>
         </Dialog>
         <div className="flex flex-col">
-          {[TYPE.INCOME, TYPE.EXPENSE].includes(type) &&
+          {[TYPE.INCOME, TYPE.EXPENSE].includes(type) && isLoading ? (
+            <div className="grid place-content-center">
+              <Spinner className="!w-7 !h-7 !border-[3px]" />
+            </div>
+          ) : data.length > 0 ? (
             data.map((item) => (
               <IncomeExpenseItem
                 key={item.id}
-                item={item as IncomeDataType}
+                item={item as ExpenseItem}
                 type={type}
                 formComponent={formComponent}
+                isLoading={isLoading}
               />
-            ))}
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center ">
+              <p className="text-center text-gray-800">{t("no-data") + "🥲"}</p>
+            </div>
+          )}
           <div className="md:grid md:grid-cols-2 md:gap-4">
             {TYPE.GOAL === type &&
               data.map((item) => (

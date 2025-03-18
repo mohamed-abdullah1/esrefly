@@ -8,10 +8,29 @@ import ItemsContainer from "./items-container";
 import ExpenseForm from "./expense-form";
 import IncomeForm from "./income-form";
 import GoalsForm from "./goals-form";
-import { TYPE } from "@/lib/enums";
+import { formType, TYPE } from "@/lib/enums";
+import { useQuery } from "@tanstack/react-query";
+import { fetchExpenses } from "@/actions/expenses";
+import { fetchIncomes } from "@/actions/incomes";
 
 const HomeContainer = () => {
   const t = useTranslations();
+  const {
+    data: expenses,
+
+    isPending,
+  } = useQuery({
+    queryKey: ["expenses"],
+    queryFn: fetchExpenses,
+  });
+  const {
+    data: incomes,
+
+    isPending: incomesIsPending,
+  } = useQuery({
+    queryKey: ["incomes"],
+    queryFn: fetchIncomes,
+  });
   const data = [
     {
       id: 1,
@@ -55,6 +74,7 @@ const HomeContainer = () => {
       ),
     },
   ];
+  // console.log("🔥✨ ", expenses);
 
   const expensesData = [
     {
@@ -118,24 +138,44 @@ const HomeContainer = () => {
     {
       id: 1,
       title: t("expenses"),
-      formComponent: <ExpenseForm />,
-      data: expensesData,
+      formComponent: (
+        type: formType,
+        setModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
+        expenseId?: string
+      ) => (
+        <ExpenseForm
+          type={type}
+          expenseId={expenseId}
+          setModalOpen={setModalOpen}
+        />
+      ),
+      data: expenses,
       type: TYPE.EXPENSE,
     },
     {
       id: 2,
       title: t("incomes"),
-      formComponent: <IncomeForm />,
+      formComponent: (
+        type: formType,
+        incomeId: string,
+        setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+      ) => (
+        <IncomeForm
+          type={type}
+          incomeId={incomeId}
+          setModalOpen={setModalOpen}
+        />
+      ),
       data: incomeData,
       type: TYPE.INCOME,
     },
-    {
-      id: 3,
-      title: t("goals"),
-      formComponent: <GoalsForm />,
-      data: goalsData,
-      type: TYPE.GOAL,
-    },
+    // {
+    //   id: 3,
+    //   title: t("goals"),
+    //   formComponent: (type: formType) => <GoalsForm type={type} />,
+    //   data: goalsData,
+    //   type: TYPE.GOAL,
+    // },
   ];
 
   return (
@@ -154,7 +194,18 @@ const HomeContainer = () => {
       </h2>
       <section className="flex flex-col gap-4 items-center md:grid md:grid-cols-2  md:gap-4 py-12">
         {itemsData.map((item) => (
-          <ItemsContainer key={item.id} {...item} />
+          <ItemsContainer
+            key={item.id}
+            data={
+              item.type === TYPE.INCOME
+                ? incomes?.data ?? []
+                : expenses?.data ?? []
+            }
+            isLoading={item.type === TYPE.INCOME ? incomesIsPending : isPending}
+            formComponent={item.formComponent}
+            title={item.title}
+            type={item.type}
+          />
         ))}
       </section>
     </div>

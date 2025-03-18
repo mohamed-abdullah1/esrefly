@@ -25,9 +25,7 @@ const ChatContainer = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(
-    null
-  );
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const isConnectionStarted = useRef(false);
   const currentResponseId = useRef<number | null>(null);
 
@@ -37,7 +35,7 @@ const ChatContainer = () => {
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(process.env.NEXT_PUBLIC_BACKEND + "/agent")
+      .withUrl("http://localhost:5083/agent?userId=hamada")
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
       .build();
@@ -74,38 +72,26 @@ const ChatContainer = () => {
     conn.on("ReceiveMessage", (word: string) => {
       console.log("Received word:", word);
 
-      // Clean the word and handle \n
-      const cleanedWord = word.trim();
-      const normalizedWord = cleanedWord
-        .replace("es ref ly", "Esrefly")
-        .replace("budget ing", "budgeting");
-
       setMessages((prevMessages) => {
         if (!currentResponseId.current) {
+          // Start a new message when no current response exists
           const newMessageId = prevMessages.length + 1;
           currentResponseId.current = newMessageId;
           return [
             ...prevMessages,
             {
               id: newMessageId,
-              content: normalizedWord,
+              content: word, // Initialize with the first word/chunk
               sender: "ai",
             },
           ];
         } else {
+          // Append to the existing message
           return prevMessages.map((msg) => {
             if (msg.id === currentResponseId.current) {
-              const currentContent = msg.content;
-              // If the word is \n, append as a newline marker; otherwise, append as a word
-              const newContent =
-                normalizedWord === "\n"
-                  ? `${currentContent}\n`
-                  : currentContent.endsWith("\n")
-                  ? `${currentContent}${normalizedWord}`
-                  : `${currentContent} ${normalizedWord}`;
               return {
                 ...msg,
-                content: newContent,
+                content: msg.content + word, // Append the new word/chunk
               };
             }
             return msg;
@@ -151,12 +137,13 @@ const ChatContainer = () => {
         ...prev,
         {
           id: prev.length + 1,
-          content: t("error-message"),
+          content: "Error sending message. Please try again.",
           sender: "ai",
         },
       ]);
     }
   };
+
   // Function to render content with newlines
   const renderContent = (content: string) => {
     return content.split("\n").map((line, index, array) => (
@@ -168,28 +155,24 @@ const ChatContainer = () => {
   };
 
   return (
-    <div className=" border bg-background rounded-lg flex flex-col">
+    <div className="h-[80vh] border bg-background rounded-lg flex flex-col">
       <div className="flex-1 overflow-hidden">
-        <ChatMessageList className="overflow-y-scroll max-h-[70vh]">
+        <ChatMessageList>
           {messages.map((message) => (
             <ChatBubble
               key={message.id}
               variant={message.sender === "user" ? "sent" : "received"}
             >
-              {message.sender === "user" ? (
-                <ChatBubbleAvatar
-                  className="h-8 w-8 shrink-0"
-                  fallback={"ME"}
-                />
-              ) : (
-                <ChatBubbleAvatar
-                  className="h-8 w-8 shrink-0"
-                  src={"/logos/small-esrefly.svg"}
-                  fallback={"AI"}
-                />
-              )}
+              <ChatBubbleAvatar
+                className="h-8 w-8 shrink-0"
+                src={
+                  message.sender === "user"
+                    ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&q=80&crop=faces&fit=crop"
+                    : "/logos/small-esrefly.svg"
+                }
+                fallback={message.sender === "user" ? "US" : "AI"}
+              />
               <ChatBubbleMessage
-                className="text-xs lg:text-base"
                 variant={message.sender === "user" ? "sent" : "received"}
               >
                 {renderContent(message.content)}
@@ -201,7 +184,7 @@ const ChatContainer = () => {
             <ChatBubble variant="received">
               <ChatBubbleAvatar
                 className="h-8 w-8 shrink-0"
-                src={"/logos/small-esrefly.svg"}
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&q=80&crop=faces&fit=crop"
                 fallback="AI"
               />
               <ChatBubbleMessage isLoading />
@@ -232,7 +215,7 @@ const ChatContainer = () => {
                 !connection ||
                 connection.state !== signalR.HubConnectionState.Connected
               }
-              className={`${isSiteArabic() ? "mr-auto" : "ml-auto"} gap-1.5`}
+              className={${isSiteArabic() ? "mr-auto" : "ml-auto"} gap-1.5}
             >
               {t("send-message")}
               <CornerDownLeft className="size-3.5" />

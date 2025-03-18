@@ -1,13 +1,8 @@
 import { IncomeDataType } from "@/lib/types";
 import React, { useState } from "react";
-import { MdLocalGroceryStore } from "react-icons/md";
-import { IoReloadCircleSharp } from "react-icons/io5";
-import { SiFreelancer } from "react-icons/si";
-import { FaShoppingBag } from "react-icons/fa";
-import { MdRestaurant } from "react-icons/md";
-import { TYPE } from "@/lib/enums";
+import { formType, TYPE } from "@/lib/enums";
 import { cn } from "@/lib/utils";
-import { CircleSlash, EllipsisVertical } from "lucide-react";
+import { CircleSlash, Container, EllipsisVertical } from "lucide-react";
 import format from "@/lib/currency";
 import {
   DropdownMenu,
@@ -36,106 +31,120 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-const expensesCategories = [
-  {
-    id: 1,
-    name: "groceries",
-    icon: <MdLocalGroceryStore className="text-red-500 w-5 h-5" />,
-  },
-  {
-    id: 2,
-    name: "shopping",
-    icon: <FaShoppingBag className="text-red-500 w-5 h-5" />,
-  },
-  {
-    id: 3,
-    name: "restaurant",
-    icon: <MdRestaurant className="text-red-500 w-5 h-5" />,
-  },
-];
-
-const incomeCategories = [
-  {
-    id: 1,
-    name: "recurring",
-    icon: <IoReloadCircleSharp className="text-green-500 w-5 h-5" />,
-  },
-  {
-    id: 2,
-    name: "one-off",
-    icon: <SiFreelancer className="text-green-500 w-5 h-5" />,
-  },
-];
+import { expensesCategories, incomeCategories } from "@/lib/conts";
+import { Skeleton } from "@/components/ui/skeleton";
+import { deleteExpense, ExpenseItem } from "@/actions/expenses";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 interface IncomeExpenseProps {
-  item: IncomeDataType;
+  item: ExpenseItem;
   type: TYPE;
-  formComponent: React.ReactNode;
+  formComponent: (type: formType, expense?: string) => React.ReactNode;
+  isLoading: boolean;
 }
 
 const IncomeExpenseItem = ({
   item,
   type,
+  isLoading,
   formComponent,
 }: IncomeExpenseProps) => {
   const [open, setOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const t = useTranslations();
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteExpense, // Call deleteExpense with the expense ID
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expenses"] }); // Invalidate the expenses query to refetch data
+      toast.success(t("delete-successfully"));
+    },
+    onError: (error) => {
+      toast.error(t("error"));
+      console.error("Delete Error:", error);
+    },
+  });
   console.log("🔥✨ ", { item });
 
   const cat =
     type === TYPE.INCOME
-      ? incomeCategories.find((cat) => cat.id === item.categoryId)
-      : expensesCategories.find((cat) => cat.id === item.categoryId) ?? {
-          id: 33,
+      ? incomeCategories.find((cat) => cat.name === item.category)
+      : expensesCategories.find((cat) => cat.name === item.category) ?? {
+          id: 4,
           name: "other",
           icon: (
-            <CircleSlash
-              className={cn(
-                (type as TYPE.INCOME) ? "text-green-500" : "text-red-500"
-              )}
+            <Container
+              className={
+                (type as TYPE) === TYPE.INCOME
+                  ? "text-green-500"
+                  : "text-red-500"
+              }
             />
           ),
         };
-
-  return item.title ? (
+  return item.description ? (
     <div className="flex justify-between py-2">
       {/* left */}
       <div className="flex gap-4">
         {/* icon */}
-        <div
-          className={cn(
-            TYPE.INCOME === type ? "bg-green-100" : "bg-red-100",
-            "rounded-full p-2 w-10 h-10",
-            "grid place-content-center"
-          )}
-        >
-          {cat?.icon}
-        </div>
+        {isLoading ? (
+          <Skeleton
+            className="rounded-full p-2 min-w-10 min-h-10
+            grid place-content-center "
+          />
+        ) : (
+          <div
+            className={cn(
+              TYPE.INCOME === type ? "bg-green-100" : "bg-red-100",
+              "rounded-full p-2 w-10 h-10",
+              "grid place-content-center"
+            )}
+          >
+            {cat?.icon}
+          </div>
+        )}
+
         {/* category & date */}
-        <div className="flex flex-col gap-0">
-          <p className={cn("text-lg", "capitalize")}>{cat?.name}</p>
-          <p className="text-xs text-gray-400">{item?.date}</p>
+        <div className="flex flex-col gap-1">
+          {isLoading ? (
+            <Skeleton className="text-lg capitalize w-24 h-4 rounded" />
+          ) : (
+            <p className={cn("text-lg", "capitalize")}>{cat?.name}</p>
+          )}
+          {isLoading ? (
+            <Skeleton className="text-xs w-12 h-4 rounded" />
+          ) : (
+            <p className="text-xs text-gray-400">{t("no-date")}</p>
+          )}
         </div>
       </div>
       {/* right */}
       <div className="flex gap-2">
         {/* price */}
-        <p
-          className={cn(
-            TYPE.INCOME === type ? "text-green-500" : "text-red-500"
-          )}
-        >
-          {format(parseInt(item?.amount))}
-        </p>
+
+        {isLoading ? (
+          <Skeleton className="text-green-500 w-12 h-4 rounded" />
+        ) : (
+          <p
+            className={cn(
+              TYPE.INCOME === type ? "text-green-500" : "text-red-500"
+            )}
+          >
+            {format(item?.amount)}
+          </p>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <EllipsisVertical />
+            {!isLoading && (
+              <Button variant="ghost" size="icon">
+                <EllipsisVertical />
 
-              <span className="sr-only">options</span>
-            </Button>
+                <span className="sr-only">options</span>
+              </Button>
+            )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setOpen(true)}>
@@ -152,7 +161,7 @@ const IncomeExpenseItem = ({
             <DialogHeader>
               <DialogTitle className="sr-only">{"title"}</DialogTitle>
               <DialogDescription className="sr-only"></DialogDescription>
-              {formComponent}
+              {formComponent(formType.edit, item.id)}
             </DialogHeader>
           </DialogContent>
         </Dialog>
@@ -167,7 +176,9 @@ const IncomeExpenseItem = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-              <AlertDialogAction>{t("continue")}</AlertDialogAction>
+              <AlertDialogAction onClick={() => deleteMutation.mutate(item.id)}>
+                {t("continue")}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -175,7 +186,7 @@ const IncomeExpenseItem = ({
       </div>
     </div>
   ) : (
-    <></>
+    <div></div>
   );
 };
 

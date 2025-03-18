@@ -7,8 +7,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { ROUTES } from "@/lib/enums";
+import { COOKIES_KEYS, ROUTES } from "@/lib/enums";
 import isSiteArabic from "@/lib/is-site-arabic";
 import { cn } from "@/lib/utils";
 import { Home, MessageCircle } from "lucide-react";
@@ -33,8 +34,18 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname();
   const t = useTranslations();
+  const { setOpenMobile } = useSidebar();
   return (
-    <Sidebar side={!isSiteArabic() ? "left" : "right"}>
+    <Sidebar
+      side={
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith(COOKIES_KEYS.LOCALIZATION + "="))
+          ?.split("=")[1] === "ar"
+          ? "right"
+          : "left"
+      }
+    >
       <SidebarHeader className="py-4">
         {/* LOGO */}
         <div className="flex gap-2 items-center mx-auto" dir="ltr">
@@ -52,6 +63,7 @@ export function AppSidebar() {
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
+                onClick={() => setOpenMobile(false)}
                 asChild
                 className={cn(
                   "w-[90%] mx-2",

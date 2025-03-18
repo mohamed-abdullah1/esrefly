@@ -3,10 +3,7 @@ import "./globals.css";
 import localFont from "next/font/local";
 import { getLocale } from "next-intl/server";
 import Providers from "@/components/providers";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import TopBar from "@/components/top-bar";
-
+import LocalizationProvider from "@/components/localization";
 const poppins = localFont({
   src: [
     {
@@ -96,16 +93,9 @@ export default async function RootLayout({
     `}
         dir={locale === "en" ? "ltr" : "rtl"}
       >
-        <Providers>
-          <SidebarProvider>
-            <AppSidebar />
-            <main>
-              <TopBar />
-
-              {children}
-            </main>
-          </SidebarProvider>
-        </Providers>
+        <LocalizationProvider>
+          <Providers>{children}</Providers>
+        </LocalizationProvider>
       </body>
     </html>
   );
