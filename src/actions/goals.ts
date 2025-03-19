@@ -1,6 +1,6 @@
 "use server";
 
-import { formSchema } from "@/app/_components/expense-form";
+import { formSchema } from "@/app/_components/goals-form";
 import { COOKIES_KEYS } from "@/lib/enums";
 import axios from "axios";
 import { AxiosError } from "axios";
@@ -8,27 +8,28 @@ import { cookies } from "next/headers";
 
 import { z } from "zod";
 
-export interface ExpenseItem {
-  id: string;
+export interface GoalItem {
+  id: string; // UUID format
+  title: string;
   description: string;
   amount: number;
-  category: string | null; // category can be a string or null
-  createdDate: string;
+  deductedRatio: number;
+  progress: number;
+  createdDate: string; // ISO 8601 date string
 }
-type ExpensesResponse = {
-  data: ExpenseItem[];
+type GoalsResponse = {
+  data: GoalItem[];
   success: boolean;
 };
 
-export const fetchExpenses = async (): Promise<ExpensesResponse> => {
+export const fetchGoals = async (): Promise<GoalsResponse> => {
   const cookieStore = await cookies();
 
   try {
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/Expenses/user/` +
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/Goals/user/` +
         cookieStore.get(COOKIES_KEYS.ESREFLY_USER_ID)?.value
     );
-
     return {
       data: response.data,
       success: true,
@@ -40,24 +41,23 @@ export const fetchExpenses = async (): Promise<ExpensesResponse> => {
     const enhancedError = {
       // message: axiosError.message,
       // status: axiosError.response?.status,
-      data: axiosError.response?.data as ExpenseItem[],
+      data: axiosError.response?.data as GoalItem[],
       success: false,
     };
     return enhancedError;
   }
 };
 
-export const addExpense = async (data: z.infer<typeof formSchema>) => {
-  const { amount, title, category } = data;
+export const addGoal = async (data: z.infer<typeof formSchema>) => {
   try {
     const cookieStore = await cookies();
-
+    const { amount, deductedRatio, ...rest } = data;
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/Expenses`,
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/Goals`,
       {
         amount: Number(amount),
-        description: title,
-        category: category,
+        deductedRatio: Number(deductedRatio),
+        ...rest,
         userId: cookieStore.get(COOKIES_KEYS.ESREFLY_USER_ID)?.value,
       }
     );
@@ -67,10 +67,10 @@ export const addExpense = async (data: z.infer<typeof formSchema>) => {
   }
 };
 
-export const getExpenseById = async (id: string): Promise<ExpenseItem> => {
+export const getGoalById = async (id: string): Promise<GoalItem> => {
   try {
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/Expenses/${id}`
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/Goals/${id}`
     );
     return response.data;
   } catch (error) {
@@ -79,35 +79,36 @@ export const getExpenseById = async (id: string): Promise<ExpenseItem> => {
   }
 };
 
-export const updateExpense = async (
+export const updateGoal = async (
   id: string,
   data: z.infer<typeof formSchema>
 ) => {
-  const { amount, title, category } = data;
+  const cookieStore = await cookies();
+  const { amount, deductedRatio, ...rest } = data;
 
   try {
     const res = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/Expenses/${id}`,
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/Goals/${id}`,
       {
-        description: title, // Map 'title' from form to 'description' in the backend
-        amount: Number(amount), // Ensure amount is a number
-        category: category, // Include category
+        amount: Number(amount),
+        deductedRatio: Number(deductedRatio),
+        ...rest,
+        userId: cookieStore.get(COOKIES_KEYS.ESREFLY_USER_ID)?.value,
       }
     );
 
-    return { d: res.data, isSuccess: true };
+    return res.data;
   } catch (e) {
     const axiosError = e as AxiosError;
-
     // Throw the error response data or a generic error message
     throw axiosError.response?.data || axiosError.message;
   }
 };
 
-export const deleteExpense = async (id: string) => {
+export const deleteGoal = async (id: string) => {
   try {
     const res = await axios.delete(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/Expenses/${id}`
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/Goals/${id}`
     );
 
     return res.data; // Return the response data if needed

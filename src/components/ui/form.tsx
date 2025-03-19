@@ -16,7 +16,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
-import { COOKIES_KEYS } from "@/lib/enums";
 import isSiteArabic from "@/lib/is-site-arabic";
 
 const Form = FormProvider;

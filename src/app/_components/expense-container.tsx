@@ -18,42 +18,29 @@ import {
 import isSiteArabic from "@/lib/is-site-arabic";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { formType, TYPE } from "@/lib/enums";
-import IncomeExpenseItem from "./income-expense-item";
-import { GoalDataType, IncomeDataType } from "@/lib/types";
-import GoalItem from "./goal-item";
+import { formType } from "@/lib/enums";
 import React from "react";
-import { ExpenseItem } from "@/actions/expenses";
+import { ExpenseItem, fetchExpenses } from "@/actions/expenses";
 import { Spinner } from "@/components/ui/spinner";
+import { useQuery } from "@tanstack/react-query";
+import ExpenseForm from "./expense-form";
+import Expense from "./expense-item";
 
-interface ItemsContainerProps {
-  title: string;
-  formComponent: (
-    type: formType,
-    expenseId?: string,
-    setModalOpen?: React.Dispatch<React.SetStateAction<boolean>>
-  ) => React.JSX.Element;
-  data: ExpenseItem[];
-  type: TYPE;
-  isLoading: boolean;
-}
-
-const ItemsContainer = ({
-  title,
-  formComponent,
-  data,
-  type,
-  isLoading,
-}: ItemsContainerProps) => {
+const ExpenseContainer = () => {
   const t = useTranslations();
   const [modalOpen, setModalOpen] = React.useState(false);
-  console.log("🔥✨ DATA", data);
+  const { data: expenses, isPending } = useQuery({
+    queryKey: ["expenses"],
+    queryFn: fetchExpenses,
+    refetchOnWindowFocus: false,
+  });
+  console.log("🔥✨ ", { expenses });
 
   return (
-    <Card className="w-full relative">
+    <Card className="w-full relative h-full">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription></CardDescription>
+        <CardTitle className="text-xl lg:text-3xl">{t("expenses")}</CardTitle>
+        <CardDescription>{t("expenses-desc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
@@ -69,25 +56,29 @@ const ItemsContainer = ({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="sr-only">{title}</DialogTitle>
+              <DialogTitle className="sr-only">{t("expenses-add")}</DialogTitle>
               <DialogDescription className="sr-only"></DialogDescription>
-              <div>{formComponent(formType.add, undefined, setModalOpen)}</div>
+              <div>
+                <ExpenseForm
+                  type={formType.add}
+                  setModalOpen={setModalOpen}
+                  expense={undefined}
+                />
+              </div>
             </DialogHeader>
           </DialogContent>
         </Dialog>
         <div className="flex flex-col">
-          {[TYPE.INCOME, TYPE.EXPENSE].includes(type) && isLoading ? (
-            <div className="grid place-content-center">
-              <Spinner className="!w-7 !h-7 !border-[3px]" />
+          {isPending ? (
+            <div className="grid place-content-center ">
+              <Spinner className="!w-7 !h-7 !border-[3px] " />
             </div>
-          ) : data.length > 0 ? (
-            data.map((item) => (
-              <IncomeExpenseItem
-                key={item.id}
-                item={item as ExpenseItem}
-                type={type}
-                formComponent={formComponent}
-                isLoading={isLoading}
+          ) : Array.isArray(expenses?.data) && expenses.data.length > 0 ? (
+            expenses?.data?.map((expense) => (
+              <Expense
+                key={expense.id}
+                expense={expense as ExpenseItem}
+                setModalOpen={setModalOpen}
               />
             ))
           ) : (
@@ -95,12 +86,6 @@ const ItemsContainer = ({
               <p className="text-center text-gray-800">{t("no-data") + "🥲"}</p>
             </div>
           )}
-          <div className="md:grid md:grid-cols-2 md:gap-4">
-            {TYPE.GOAL === type &&
-              data.map((item) => (
-                <GoalItem key={item.id} item={item as GoalDataType} />
-              ))}
-          </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between"></CardFooter>
@@ -108,4 +93,4 @@ const ItemsContainer = ({
   );
 };
 
-export default ItemsContainer;
+export default ExpenseContainer;

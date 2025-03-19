@@ -1,8 +1,7 @@
-import { IncomeDataType } from "@/lib/types";
 import React, { useState } from "react";
-import { formType, TYPE } from "@/lib/enums";
+import { COOKIES_KEYS, formType } from "@/lib/enums";
 import { cn } from "@/lib/utils";
-import { CircleSlash, Container, EllipsisVertical } from "lucide-react";
+import { Container, EllipsisVertical } from "lucide-react";
 import format from "@/lib/currency";
 import {
   DropdownMenu,
@@ -31,26 +30,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { expensesCategories, incomeCategories } from "@/lib/conts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { expensesCategories } from "@/lib/conts";
 import { deleteExpense, ExpenseItem } from "@/actions/expenses";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Spinner } from "@/components/ui/spinner";
+import ExpenseForm from "./expense-form";
+import Cookies from "js-cookie";
 
-interface IncomeExpenseProps {
-  item: ExpenseItem;
-  type: TYPE;
-  formComponent: (type: formType, expense?: string) => React.ReactNode;
-  isLoading: boolean;
-}
-
-const IncomeExpenseItem = ({
-  item,
-  type,
-  isLoading,
-  formComponent,
-}: IncomeExpenseProps) => {
+const Expense = ({
+  expense,
+}: {
+  expense: ExpenseItem;
+  setModalOpen: (value: boolean) => void;
+}) => {
   const [open, setOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const t = useTranslations();
@@ -60,6 +52,7 @@ const IncomeExpenseItem = ({
     mutationFn: deleteExpense, // Call deleteExpense with the expense ID
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] }); // Invalidate the expenses query to refetch data
+      queryClient.invalidateQueries({ queryKey: ["metadata"] }); // Invalidate the expenses query to refetch data
       toast.success(t("delete-successfully"));
     },
     onError: (error) => {
@@ -67,84 +60,65 @@ const IncomeExpenseItem = ({
       console.error("Delete Error:", error);
     },
   });
-  console.log("🔥✨ ", { item });
 
-  const cat =
-    type === TYPE.INCOME
-      ? incomeCategories.find((cat) => cat.name === item.category)
-      : expensesCategories.find((cat) => cat.name === item.category) ?? {
-          id: 4,
-          name: "other",
-          icon: (
-            <Container
-              className={
-                (type as TYPE) === TYPE.INCOME
-                  ? "text-green-500"
-                  : "text-red-500"
-              }
-            />
-          ),
-        };
-  return item.description ? (
+  const cat = expensesCategories.find(
+    (cat) => cat.name === expense.category
+  ) ?? {
+    id: 4,
+    name: "other",
+    icon: <Container className={"text-red-500"} />,
+  };
+  return expense.description ? (
     <div className="flex justify-between py-2">
       {/* left */}
       <div className="flex gap-4">
         {/* icon */}
-        {isLoading ? (
-          <Skeleton
-            className="rounded-full p-2 min-w-10 min-h-10
-            grid place-content-center "
-          />
-        ) : (
-          <div
-            className={cn(
-              TYPE.INCOME === type ? "bg-green-100" : "bg-red-100",
-              "rounded-full p-2 w-10 h-10",
-              "grid place-content-center"
-            )}
-          >
-            {cat?.icon}
-          </div>
-        )}
+        <div
+          className={cn(
+            "bg-red-100",
+            "rounded-full p-2 w-10 h-10",
+            "grid place-content-center"
+          )}
+        >
+          {cat?.icon}
+        </div>
 
         {/* category & date */}
         <div className="flex flex-col gap-1">
-          {isLoading ? (
-            <Skeleton className="text-lg capitalize w-24 h-4 rounded" />
-          ) : (
-            <p className={cn("text-lg", "capitalize")}>{cat?.name}</p>
-          )}
-          {isLoading ? (
-            <Skeleton className="text-xs w-12 h-4 rounded" />
-          ) : (
-            <p className="text-xs text-gray-400">{t("no-date")}</p>
-          )}
+          <p className={cn("text-lg", "capitalize")}>
+            {expense.description.slice(0, 15)}
+          </p>
+          <div className="flex gap-2">
+            <p className="text-xs text-gray-400">
+              {new Intl.DateTimeFormat(Cookies.get(COOKIES_KEYS.LOCALIZATION), {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }).format(new Date(expense?.createdDate))}
+            </p>
+
+            <p className="text-xs text-gray-400">
+              {new Intl.DateTimeFormat(Cookies.get(COOKIES_KEYS.LOCALIZATION), {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              }).format(new Date(expense?.createdDate))}
+            </p>
+          </div>
         </div>
       </div>
       {/* right */}
       <div className="flex gap-2">
         {/* price */}
 
-        {isLoading ? (
-          <Skeleton className="text-green-500 w-12 h-4 rounded" />
-        ) : (
-          <p
-            className={cn(
-              TYPE.INCOME === type ? "text-green-500" : "text-red-500"
-            )}
-          >
-            {format(item?.amount)}
-          </p>
-        )}
+        <p className={cn("text-red-500")}>{format(expense?.amount)}</p>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {!isLoading && (
-              <Button variant="ghost" size="icon">
-                <EllipsisVertical />
+            <Button variant="ghost" size="icon">
+              <EllipsisVertical />
 
-                <span className="sr-only">options</span>
-              </Button>
-            )}
+              <span className="sr-only">options</span>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setOpen(true)}>
@@ -161,7 +135,11 @@ const IncomeExpenseItem = ({
             <DialogHeader>
               <DialogTitle className="sr-only">{"title"}</DialogTitle>
               <DialogDescription className="sr-only"></DialogDescription>
-              {formComponent(formType.edit, item.id)}
+              <ExpenseForm
+                type={formType.edit}
+                setModalOpen={setOpen}
+                expense={expense}
+              />
             </DialogHeader>
           </DialogContent>
         </Dialog>
@@ -176,7 +154,10 @@ const IncomeExpenseItem = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-              <AlertDialogAction onClick={() => deleteMutation.mutate(item.id)}>
+              <AlertDialogAction
+                onClick={() => deleteMutation.mutate(expense.id)}
+                className="text-white"
+              >
                 {t("continue")}
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -190,4 +171,4 @@ const IncomeExpenseItem = ({
   );
 };
 
-export default IncomeExpenseItem;
+export default Expense;

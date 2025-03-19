@@ -17,9 +17,15 @@ export const loginUser = async (data: z.infer<typeof formSchema>) => {
     );
     console.log("🔥✨ ", res);
     return res.data;
-  } catch (e: any) {
-    console.error("🔥✨ ", e);
+  } catch (e) {
+    if (axios.isAxiosError(e)) {
+      console.error("🔥✨ ", e);
 
-    throw e.response?.data || e.message;
+      throw e.response?.data || e.message;
+    } else {
+      console.error("🔥✨ ", e);
+
+      throw (e as Error).message;
+    }
   }
 };

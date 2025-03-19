@@ -1,6 +1,5 @@
 "use client";
 import { formType } from "@/lib/enums";
-import { useState } from "react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,37 +22,40 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslations } from "next-intl";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addIncome, getIncomeById, updateIncome } from "@/actions/incomes";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addIncome, IncomeItem, updateIncome } from "@/actions/incomes";
 import { toast } from "sonner";
 import { incomeCategories } from "@/lib/conts";
 
 interface IncomeFormProps {
   type: formType;
-  incomeId: string;
-  setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  income?: IncomeItem;
+  setModalOpen: (value: boolean) => void;
 }
 export const formSchema = z.object({
   incomeSource: z.string().min(1).min(2).max(100),
   amount: z.string(),
   type: z.string(),
 });
-const IncomeForm = ({ type, incomeId, setModalOpen }: IncomeFormProps) => {
+const IncomeForm = ({ type, income, setModalOpen }: IncomeFormProps) => {
   const t = useTranslations();
   const queryClient = useQueryClient();
-  const { data: incomeData } = useQuery({
-    queryKey: ["incomes", incomeId],
-    queryFn: () => getIncomeById(incomeId!),
-    enabled: !!incomeId, // Only fetch if incomeId is provided
-  });
 
   const mutation = useMutation({
-    mutationFn: (values: z.infer<typeof formSchema>) =>
-      type === formType.add
-        ? addIncome(values)
-        : updateIncome(incomeId!, values),
+    mutationFn: (values: z.infer<typeof formSchema>) => {
+      if (type === formType.add) {
+        return addIncome(values);
+      } else {
+        // Ensure `income` and `income.id` are defined before proceeding
+        if (!income?.id) {
+          throw new Error("Income ID is required for updating.");
+        }
+        return updateIncome(income.id, values);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
       setModalOpen(false);
       toast.success(
         type === formType.add
@@ -69,6 +70,11 @@ const IncomeForm = ({ type, incomeId, setModalOpen }: IncomeFormProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      incomeSource: income?.description || "",
+      amount: income?.amount?.toString() || "0",
+      type: income?.category || "",
+    },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) =>

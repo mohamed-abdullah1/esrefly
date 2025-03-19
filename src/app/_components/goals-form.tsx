@@ -1,14 +1,11 @@
 "use client";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,23 +14,71 @@ import {
 import { Input } from "@/components/ui/input";
 import { formType } from "@/lib/enums";
 import { useTranslations } from "next-intl";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addGoal, updateGoal } from "@/actions/goals";
+import { toast } from "sonner";
 
 interface GoalsFormProps {
   type: formType;
+  setModalOpen: (value: boolean) => void;
+  goal?: {
+    id: string; // UUID format
+    title: string;
+    description: string;
+    amount: number;
+    deductedRatio: number;
+    progress: number;
+    createdDate: string; // ISO 8601 date string}
+  };
 }
-const formSchema = z.object({
-  incomeSource: z.string().min(1).min(2).max(100),
-  amount: z.number(),
-  deducedPercentage: z.number().min(0).max(100),
+export const formSchema = z.object({
+  title: z.string().min(1).min(2).max(100),
+  description: z.string().min(1).min(2).max(100),
+  amount: z.string(),
+  deductedRatio: z.coerce.number().min(0).max(100), // Ensures a number between 0 and 100
 });
 
-const GoalsForm = ({ type }: GoalsFormProps) => {
+const GoalsForm = ({ type, setModalOpen, goal }: GoalsFormProps) => {
   const t = useTranslations();
-
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (values: z.infer<typeof formSchema>) => {
+      if (type === formType.add) {
+        return addGoal(values);
+      } else {
+        // Ensure `goal` and `goal.id` are defined before proceeding
+        if (!goal?.id) {
+          throw new Error("Goal ID is required for updating.");
+        }
+        return updateGoal(goal.id, values);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["metadata"] });
+      setModalOpen(false);
+      toast.success(
+        type === formType.add
+          ? t("add-successfully")
+          : t("updated-successfully")
+      );
+    },
+    onError: () => {
+      toast.error(t("error"));
+    },
+  });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: goal?.title || "",
+      description: goal?.description || "",
+      amount: goal?.amount?.toString() || "0",
+      deductedRatio: goal?.deductedRatio || 0,
+    },
   });
-  const onSubmit = (values: z.infer<typeof formSchema>) => console.log(values);
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    mutation.mutate(values);
+  };
 
   return (
     <div className="w-full">
@@ -47,10 +92,24 @@ const GoalsForm = ({ type }: GoalsFormProps) => {
         >
           <FormField
             control={form.control}
-            name="incomeSource"
+            name="title"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("goal-name")}</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. new car" type="text" {...field} />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Goal Description</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. new car" type="text" {...field} />
                 </FormControl>
@@ -77,7 +136,7 @@ const GoalsForm = ({ type }: GoalsFormProps) => {
 
           <FormField
             control={form.control}
-            name="deducedPercentage"
+            name="deductedRatio"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("income-deduction-percentage")}</FormLabel>
@@ -89,7 +148,13 @@ const GoalsForm = ({ type }: GoalsFormProps) => {
               </FormItem>
             )}
           />
-          <Button type="submit">{t("submit")}</Button>
+          <Button
+            loading={mutation.isPending}
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {t("submit")}
+          </Button>
         </form>
       </Form>
     </div>

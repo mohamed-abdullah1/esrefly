@@ -61,5 +61,8 @@
   "no-data": "لا توجد بيانات",
   "recurring": "Recurring",
   "one-off": "One-off",
-  "of": "من"
+  "of": "من",
+  "incomes-desc": "ابدأ الدخل هنا",
+  "expenses-desc": "ابدأ المصروفات هنا",
+  "goals-desc": "ابدأ الأهداف هنا"
 }

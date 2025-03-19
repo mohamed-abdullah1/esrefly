@@ -10,7 +10,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { COOKIES_KEYS, ROUTES } from "@/lib/enums";
-import isSiteArabic from "@/lib/is-site-arabic";
 import { cn } from "@/lib/utils";
 import { Home, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";

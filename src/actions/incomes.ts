@@ -14,10 +14,51 @@ export interface IncomeItem {
   description: string;
   amount: number;
   category: string | null; // category can be a string or null
+  createdDate: string;
+}
+export interface MetadataItem {
+  id: string;
+  externalId: string;
+  name: string;
+  totalBalance: number;
+  manageableBalance: number;
+  goalProgress: number;
+  totalIncome: number;
+  totalExpense: number;
 }
 type IncomesResponse = {
   data: IncomeItem[];
   success: boolean;
+};
+type MetadataResponse = {
+  data: MetadataItem;
+  success: boolean;
+};
+export const fetchMetadata = async (): Promise<MetadataResponse> => {
+  const cookieStore = await cookies();
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/users/` +
+        cookieStore.get(COOKIES_KEYS.ESREFLY_USER_ID)?.value
+    );
+    console.log("🔥✨ response.data metadata", response.data);
+    return {
+      data: response.data,
+      success: true,
+    };
+  } catch (error) {
+    const axiosError = error as AxiosError;
+
+    // You can customize the error object structure
+    const enhancedError = {
+      // message: axiosError.message,
+      // status: axiosError.response?.status,
+      data: axiosError.response?.data as MetadataItem,
+      success: false,
+    };
+    console.error("Error fetching data:", error);
+    return enhancedError;
+  }
 };
 
 export const fetchIncomes = async (
@@ -66,10 +107,10 @@ export const addIncome = async (data: z.infer<typeof formSchema>) => {
     );
     console.log("🔥✨ ", res);
     return res.data;
-  } catch (e: any) {
+  } catch (e) {
     console.log("🔥✨ ", e);
 
-    throw e.response?.data || e.message;
+    throw (e as AxiosError).response?.data || (e as Error).message;
   }
 };
 
@@ -108,7 +149,7 @@ export const updateIncome = async (
 
     console.log("🔥✨ Update Income Response:", res.data);
     return res.data;
-  } catch (e: any) {
+  } catch (e) {
     const axiosError = e as AxiosError;
     console.error("🔥✨ Update Income Error:", axiosError);
 
@@ -125,7 +166,7 @@ export const deleteIncome = async (id: string) => {
 
     console.log("🔥✨ Delete Income Response:", res.data);
     return res.data; // Return the response data if needed
-  } catch (e: any) {
+  } catch (e) {
     const axiosError = e as AxiosError;
     console.error("🔥✨ Delete Income Error:", axiosError);
 

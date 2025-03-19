@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { COOKIES_KEYS } from "./lib/enums";
 
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
   // Check if cookie exists
   const userId = req.cookies.get(COOKIES_KEYS.ESREFLY_USER_ID)?.value;
 

@@ -63,5 +63,8 @@
   "start": "Start",
   "no-data": "No data",
   "recurring": "Recurring",
-  "one-off": "One-off"
+  "one-off": "One-off",
+  "incomes-desc": "Modify your incomes here 👇",
+  "expenses-desc": "Start your expenses here 👇",
+  "goals-desc": "Add your goals here 👇"
 }
