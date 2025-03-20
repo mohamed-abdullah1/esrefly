@@ -5,7 +5,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Progress } from "@/components/ui/progress";
 import format from "@/lib/currency";
 import isSiteArabic from "@/lib/is-site-arabic";
 import { EllipsisVertical } from "lucide-react";
@@ -63,9 +62,6 @@ const GoalItem = ({ item }: GoalItemProps) => {
   const [deleteModal, setDeleteModal] = React.useState(false);
 
   const amount = format(item.amount);
-  const achieved = format(
-    Math.floor(((item.amount * item.progress) / 100) * 100)
-  );
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: deleteGoal, // Call deleteIncome with the income ID
@@ -118,12 +114,10 @@ const GoalItem = ({ item }: GoalItemProps) => {
       {/* progress */}
       <div className="py-4 ">
         <div className="flex justify-between py-2  items-center">
-          <p className="text-gray-400 text-sm">{t("progress")}</p>
-          <p className="text-sm">
-            {achieved}/{amount}
-          </p>
+          <p className="text-gray-400 text-[16px]">{t("target")}</p>
+          <p className="text-lg font-medium">{amount}</p>
         </div>
-        <Progress value={item.progress} />
+        {/* <Progress value={item.progress} /> */}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger></DialogTrigger>

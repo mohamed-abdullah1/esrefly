@@ -13,26 +13,8 @@ import { ChatInput } from "@/components/ui/chat-input";
 import { useTranslations } from "next-intl";
 import isSiteArabic from "@/lib/is-site-arabic";
 import * as signalR from "@microsoft/signalr";
-import { fetchMetadata, fetchPromptHistory } from "@/actions/incomes";
-import { useQuery } from "@tanstack/react-query";
-import { Spinner } from "@/components/loading-spinner";
-import { useDateContext } from "@/components/date-provider";
 
 const ChatContainer = () => {
-  const { chosenDate } = useDateContext();
-  const { data: metadata, isPending: metaDataIsPending } = useQuery({
-    queryKey: ["metadata"],
-    queryFn: fetchMetadata,
-    refetchIntervalInBackground: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-  const { data: prompts, isPending: promptsIsPending } = useQuery({
-    queryKey: ["prompts"],
-    queryFn: fetchPromptHistory,
-    refetchOnWindowFocus: false,
-  });
-
   const t = useTranslations();
   const [messages, setMessages] = useState([
     {
@@ -50,68 +32,21 @@ const ChatContainer = () => {
   const currentResponseId = useRef<number | null>(null);
 
   useEffect(() => {
-    console.log("🔥✨ ", { prompts });
-
-    if (!Array.isArray(prompts)) {
-      // If prompts is not an array or prompts[0] is not an array, set messages to an empty array
-      setMessages([
-        {
-          id: 1,
-          content: "No prompts found for today. Please try again tomorrow.",
-          sender: "ai",
-        },
-      ]);
-      return;
-    }
-    let allMessages = [
-      { id: 1, content: "Hello! How can I help you today?", sender: "ai" },
-    ];
-    const todayPrompts = prompts.find((p) => p.createdDate === chosenDate);
-
-    if (!todayPrompts) {
-      allMessages = [
-        { id: 1, content: "Hello! How can I help you today?", sender: "ai" },
-      ];
-    } else {
-      todayPrompts?.prompts.forEach((prompt) => {
-        const prompt1 = {
-          id: prompt.createdDate.length + prompt.prompt.length + Math.random(),
-          content: prompt.prompt,
-          sender: "user",
-        };
-        const response = {
-          id:
-            prompt.createdDate.length + prompt.response.length + Math.random(),
-          content: prompt.response,
-          sender: "ai",
-        };
-        allMessages = [...allMessages, prompt1, response];
-      });
-    }
-
-    setMessages([...allMessages]);
-  }, [prompts, chosenDate]); // Add prompts to the dependency array
+    console.log("Messages state updated:", messages);
+  }, [messages]);
 
   useEffect(() => {
-    let newConnection: signalR.HubConnection | null = null;
+    const newConnection = new signalR.HubConnectionBuilder()
+      .withUrl("http://localhost:5083/agent?userId=sadasd")
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
 
-    if (metadata?.data.externalId || "") {
-      newConnection = new signalR.HubConnectionBuilder()
-        .withUrl(
-          process.env.NEXT_PUBLIC_BACKEND +
-            "/agent" +
-            `?userId=${metadata?.data.externalId}`
-        )
-        .withAutomaticReconnect()
-        .configureLogging(signalR.LogLevel.Information)
-        .build();
-
-      setConnection(newConnection);
-    }
+    setConnection(newConnection);
 
     const startConnection = async () => {
       if (
-        newConnection?.state === signalR.HubConnectionState.Disconnected &&
+        newConnection.state === signalR.HubConnectionState.Disconnected &&
         !isConnectionStarted.current
       ) {
         try {
@@ -133,7 +68,7 @@ const ChatContainer = () => {
         isConnectionStarted.current = false;
       }
     };
-  }, [metadata?.data.externalId || ""]);
+  }, []);
 
   const setupMessageHandler = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (word: string) => {
@@ -191,11 +126,11 @@ const ChatContainer = () => {
     try {
       if (connection.state === signalR.HubConnectionState.Connected) {
         console.log("Sending prompt:", input);
-        await connection.invoke("SendPrompt", metadata?.data.externalId, input);
+        await connection.invoke("SendPrompt", "sadasd", input);
       } else {
         console.warn("Connection not active, retrying to start...");
         await connection.start();
-        await connection.invoke("SendPrompt", metadata?.data.externalId, input);
+        await connection.invoke("SendPrompt", "sadasd", input);
       }
     } catch (err) {
       console.error("Error sending message: ", err);
@@ -204,12 +139,13 @@ const ChatContainer = () => {
         ...prev,
         {
           id: prev.length + 1,
-          content: t("error-message"),
+          content: "Error sending message. Please try again.",
           sender: "ai",
         },
       ]);
     }
   };
+
   // Function to render content with newlines
   const renderContent = (content: string) => {
     return content.split("\n").map((line, index, array) => (
@@ -220,33 +156,25 @@ const ChatContainer = () => {
     ));
   };
 
-  return metaDataIsPending || promptsIsPending ? (
-    <div className="grid place-content-center ">
-      <Spinner className="!w-7 !h-7 !border-[3px] " />
-    </div>
-  ) : (
-    <div className=" border bg-background rounded-lg flex flex-col">
+  return (
+    <div className="h-[80vh] border bg-background rounded-lg flex flex-col">
       <div className="flex-1 overflow-hidden">
-        <ChatMessageList className="overflow-y-scroll max-h-[63vh]">
+        <ChatMessageList>
           {messages.map((message) => (
             <ChatBubble
               key={message.id}
               variant={message.sender === "user" ? "sent" : "received"}
             >
-              {message.sender === "user" ? (
-                <ChatBubbleAvatar
-                  className="h-8 w-8 shrink-0"
-                  fallback={"ME"}
-                />
-              ) : (
-                <ChatBubbleAvatar
-                  className="h-8 w-8 shrink-0"
-                  src={"/logos/small-esrefly.svg"}
-                  fallback={"AI"}
-                />
-              )}
+              <ChatBubbleAvatar
+                className="h-8 w-8 shrink-0"
+                src={
+                  message.sender === "user"
+                    ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&q=80&crop=faces&fit=crop"
+                    : "/logos/small-esrefly.svg"
+                }
+                fallback={message.sender === "user" ? "US" : "AI"}
+              />
               <ChatBubbleMessage
-                className="text-xs lg:text-base"
                 variant={message.sender === "user" ? "sent" : "received"}
               >
                 {renderContent(message.content)}
@@ -258,7 +186,7 @@ const ChatContainer = () => {
             <ChatBubble variant="received">
               <ChatBubbleAvatar
                 className="h-8 w-8 shrink-0"
-                src={"/logos/small-esrefly.svg"}
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&q=80&crop=faces&fit=crop"
                 fallback="AI"
               />
               <ChatBubbleMessage isLoading />

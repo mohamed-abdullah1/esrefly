@@ -67,5 +67,7 @@
   "incomes-desc": "Modify your incomes here 👇",
   "expenses-desc": "Start your expenses here 👇",
   "goals-desc": "Add your goals here 👇",
-  "chat-desc": "This is a chat application that allows you to interact with the AI agent 🤖."
+  "chat-desc": "This is a chat application that allows you to interact with the AI agent 🤖.",
+  "history": "Chat History 🧠",
+  "target": "Target Balance 🎯"
 }

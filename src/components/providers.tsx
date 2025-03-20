@@ -6,6 +6,7 @@ import { ThemeProvider } from "./theme-provider";
 import TopBar from "./top-bar";
 import { SidebarProvider } from "./ui/sidebar";
 import { Toaster } from "./ui/sonner";
+import { DateProvider } from "./date-provider";
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
@@ -16,13 +17,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <SidebarProvider>
-          {!pathname.includes("auth") && <AppSidebar />}
-          <main>
-            {!pathname.includes("auth") && <TopBar />}
-            {children}
-          </main>
-        </SidebarProvider>
+        <DateProvider>
+          <SidebarProvider>
+            {!pathname.includes("auth") && <AppSidebar />}
+            <main>
+              {!pathname.includes("auth") && <TopBar />}
+              {children}
+            </main>
+          </SidebarProvider>
+        </DateProvider>
       </ThemeProvider>
       <Toaster
         richColors={true}

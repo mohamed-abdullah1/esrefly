@@ -10,6 +10,7 @@ import ExpenseContainer from "./expense-container";
 import IncomeContainer from "./income-container";
 import GoalContainer from "./goal-container";
 import { Spinner } from "@/components/ui/spinner";
+import isSiteArabic from "@/lib/is-site-arabic";
 
 const HomeContainer = () => {
   const t = useTranslations();
@@ -22,7 +23,9 @@ const HomeContainer = () => {
     {
       id: 1,
       title: t("total-income"),
-      desc: `+${0}% ${t("from-last-month")}`,
+      desc: `+ ${
+        isSiteArabic() ? new Intl.NumberFormat("ar-EG").format(0) : 0
+      } % ${t("from-last-month")}`,
       descClassName: "text-green-500",
       amount: (metadata?.data.totalIncome || 0).toString(),
       icon: (
@@ -32,7 +35,9 @@ const HomeContainer = () => {
     {
       id: 2,
       title: t("total-expenses"),
-      desc: `-${0}% ${t("from-last-month")}`,
+      desc: `- ${
+        isSiteArabic() ? new Intl.NumberFormat("ar-EG").format(0) : 0
+      } % ${t("from-last-month")}`,
       descClassName: "text-red-500",
       amount: (metadata?.data.totalExpense || 0).toString(),
       icon: (
@@ -43,7 +48,9 @@ const HomeContainer = () => {
     {
       id: 3,
       title: t("savings"),
-      desc: `+${0}% ${t("from-last-month")}`,
+      desc: `+ ${
+        isSiteArabic() ? new Intl.NumberFormat("ar-EG").format(0) : 0
+      } % ${t("from-last-month")}`,
       descClassName: "text-blue-500",
       amount: (metadata?.data.totalBalance || 0).toString(),
       icon: (
@@ -53,7 +60,11 @@ const HomeContainer = () => {
     {
       id: 4,
       title: t("goal-progress"),
-      desc: `${0} ${t("of")} ${8} ${t("goals-achieved")}`,
+      desc: ` ${
+        isSiteArabic() ? new Intl.NumberFormat("ar-EG").format(0) : 0
+      }  ${t("of")} ${
+        isSiteArabic() ? new Intl.NumberFormat("ar-EG").format(8) : 8
+      } ${t("goals-achieved")}`,
       descClassName: "text-violet-500",
       amount: (metadata?.data.goalProgress || 0) + "%",
       icon: (

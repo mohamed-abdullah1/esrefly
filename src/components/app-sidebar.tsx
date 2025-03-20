@@ -1,4 +1,5 @@
 "use client";
+import { fetchPromptHistory } from "@/actions/incomes";
 import {
   Sidebar,
   SidebarFooter,
@@ -11,11 +12,14 @@ import {
 } from "@/components/ui/sidebar";
 import { COOKIES_KEYS, ROUTES } from "@/lib/enums";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { Home, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useDateContext } from "./date-provider";
+import { Spinner } from "./loading-spinner";
 
 const items = [
   {
@@ -31,6 +35,17 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const {
+    data: prompts,
+    isPending: promptsIsPending,
+    refetch,
+  } = useQuery({
+    queryKey: ["prompts"],
+    queryFn: fetchPromptHistory,
+    refetchOnWindowFocus: false,
+  });
+  const { chosenDate, setChosenDate } = useDateContext();
+
   const pathname = usePathname();
   const t = useTranslations();
   const { setOpenMobile } = useSidebar();
@@ -77,7 +92,45 @@ export function AppSidebar() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-      </SidebarGroupContent>{" "}
+      </SidebarGroupContent>
+      {pathname === ROUTES.CHAT && (
+        <SidebarGroupContent className="py-4">
+          <SidebarHeader className="py-4 font-bold">
+            <span>{t("history")}</span>
+          </SidebarHeader>
+          <SidebarMenu>
+            {promptsIsPending ? (
+              <div className="grid place-content-center">
+                <Spinner className="!w-5 !h-5 border-[3px]" />
+              </div>
+            ) : (
+              prompts?.map((prompt) => (
+                <SidebarMenuItem key={prompt.createdDate}>
+                  <SidebarMenuButton
+                    onClick={() => {
+                      setOpenMobile(false);
+                      setChosenDate(prompt.createdDate);
+                      refetch();
+                    }}
+                    asChild
+                    className={cn(
+                      "w-[90%] mx-2",
+                      "cursor-pointer",
+                      "hover:!bg-primary/10 hover:text-primary",
+                      chosenDate === prompt.createdDate &&
+                        "!bg-primary/10 text-primary"
+                    )}
+                  >
+                    <div className="text-primary/90 border-1 font-semibold ">
+                      <span>{prompt.createdDate}</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))
+            )}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      )}
       <SidebarFooter />
     </Sidebar>
   );
