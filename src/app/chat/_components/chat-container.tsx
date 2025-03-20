@@ -26,6 +26,7 @@ const ChatContainer = () => {
   const { data: prompts, isPending: promptsIsPending } = useQuery({
     queryKey: ["prompts"],
     queryFn: fetchPromptHistory,
+    refetchOnWindowFocus: false,
   });
 
   const t = useTranslations();
@@ -49,16 +50,27 @@ const ChatContainer = () => {
 
     if (!Array.isArray(prompts)) {
       // If prompts is not an array or prompts[0] is not an array, set messages to an empty array
-      setMessages([]);
+      setMessages([
+        {
+          id: 1,
+          content: "No prompts found for today. Please try again tomorrow.",
+          sender: "ai",
+        },
+      ]);
       return;
     }
-    console.log("🔥✨ ", prompts[0].prompts);
     let allMessages = [
       { id: 1, content: "Hello! How can I help you today?", sender: "ai" },
     ];
-    prompts
-      .find((p) => isTodayTargetDate(p.createdDate))
-      ?.prompts.forEach((prompt) => {
+    const todayPrompts = prompts.find((p) => isTodayTargetDate(p.createdDate));
+    console.log("🔥✨ ", todayPrompts);
+
+    if (!todayPrompts) {
+      allMessages = [
+        { id: 1, content: "Hello! How can I help you today?", sender: "ai" },
+      ];
+    } else {
+      todayPrompts?.prompts.forEach((prompt) => {
         const prompt1 = {
           id: prompt.createdDate.length + prompt.prompt.length + Math.random(),
           content: prompt.prompt,
@@ -72,6 +84,7 @@ const ChatContainer = () => {
         };
         allMessages = [...allMessages, prompt1, response];
       });
+    }
 
     setMessages([...allMessages]);
   }, [prompts]); // Add prompts to the dependency array
