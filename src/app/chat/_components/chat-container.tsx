@@ -13,8 +13,15 @@ import { ChatInput } from "@/components/ui/chat-input";
 import { useTranslations } from "next-intl";
 import isSiteArabic from "@/lib/is-site-arabic";
 import * as signalR from "@microsoft/signalr";
+import { fetchMetadata } from "@/actions/incomes";
+import { useQuery } from "@tanstack/react-query";
+import { Spinner } from "@/components/loading-spinner";
 
 const ChatContainer = () => {
+  const { data: metadata, isPending: metaDataIsPending } = useQuery({
+    queryKey: ["metadata"],
+    queryFn: fetchMetadata,
+  });
   const t = useTranslations();
   const [messages, setMessages] = useState([
     {
@@ -36,17 +43,25 @@ const ChatContainer = () => {
   }, [messages]);
 
   useEffect(() => {
-    const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(process.env.NEXT_PUBLIC_BACKEND + "/agent")
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
+    let newConnection: signalR.HubConnection | null = null;
 
-    setConnection(newConnection);
+    if (metadata?.data.externalId) {
+      newConnection = new signalR.HubConnectionBuilder()
+        .withUrl(
+          process.env.NEXT_PUBLIC_BACKEND +
+            "/agent" +
+            `?userId=${metadata?.data.externalId}`
+        )
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+      setConnection(newConnection);
+    }
 
     const startConnection = async () => {
       if (
-        newConnection.state === signalR.HubConnectionState.Disconnected &&
+        newConnection?.state === signalR.HubConnectionState.Disconnected &&
         !isConnectionStarted.current
       ) {
         try {
@@ -68,7 +83,7 @@ const ChatContainer = () => {
         isConnectionStarted.current = false;
       }
     };
-  }, []);
+  }, [metadata?.data.externalId]);
 
   const setupMessageHandler = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (word: string) => {
@@ -138,11 +153,11 @@ const ChatContainer = () => {
     try {
       if (connection.state === signalR.HubConnectionState.Connected) {
         console.log("Sending prompt:", input);
-        await connection.invoke("SendPrompt", "hamada", input);
+        await connection.invoke("SendPrompt", metadata?.data.externalId, input);
       } else {
         console.warn("Connection not active, retrying to start...");
         await connection.start();
-        await connection.invoke("SendPrompt", "hamada", input);
+        await connection.invoke("SendPrompt", metadata?.data.externalId, input);
       }
     } catch (err) {
       console.error("Error sending message: ", err);
@@ -167,7 +182,11 @@ const ChatContainer = () => {
     ));
   };
 
-  return (
+  return metaDataIsPending ? (
+    <div className="grid place-content-center ">
+      <Spinner className="!w-7 !h-7 !border-[3px] " />
+    </div>
+  ) : (
     <div className=" border bg-background rounded-lg flex flex-col">
       <div className="flex-1 overflow-hidden">
         <ChatMessageList className="overflow-y-scroll max-h-[70vh]">
