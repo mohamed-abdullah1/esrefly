@@ -66,5 +66,6 @@
   "one-off": "One-off",
   "incomes-desc": "Modify your incomes here 👇",
   "expenses-desc": "Start your expenses here 👇",
-  "goals-desc": "Add your goals here 👇"
+  "goals-desc": "Add your goals here 👇",
+  "chat-desc": "This is a chat application that allows you to interact with the AI agent 🤖."
 }

@@ -13,15 +13,21 @@ import { ChatInput } from "@/components/ui/chat-input";
 import { useTranslations } from "next-intl";
 import isSiteArabic from "@/lib/is-site-arabic";
 import * as signalR from "@microsoft/signalr";
-import { fetchMetadata } from "@/actions/incomes";
+import { fetchMetadata, fetchPromptHistory } from "@/actions/incomes";
 import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/loading-spinner";
+import { isTodayTargetDate } from "@/lib/is-today";
 
 const ChatContainer = () => {
   const { data: metadata, isPending: metaDataIsPending } = useQuery({
     queryKey: ["metadata"],
     queryFn: fetchMetadata,
   });
+  const { data: prompts, isPending: promptsIsPending } = useQuery({
+    queryKey: ["prompts"],
+    queryFn: fetchPromptHistory,
+  });
+
   const t = useTranslations();
   const [messages, setMessages] = useState([
     {
@@ -39,8 +45,36 @@ const ChatContainer = () => {
   const currentResponseId = useRef<number | null>(null);
 
   useEffect(() => {
-    console.log("Messages state updated:", messages);
-  }, [messages]);
+    console.log("🔥✨ ", { prompts });
+
+    if (!Array.isArray(prompts)) {
+      // If prompts is not an array or prompts[0] is not an array, set messages to an empty array
+      setMessages([]);
+      return;
+    }
+    console.log("🔥✨ ", prompts[0].prompts);
+    let allMessages = [
+      { id: 1, content: "Hello! How can I help you today?", sender: "ai" },
+    ];
+    prompts
+      .find((p) => isTodayTargetDate(p.createdDate))
+      ?.prompts.forEach((prompt) => {
+        const prompt1 = {
+          id: prompt.createdDate.length + prompt.prompt.length + Math.random(),
+          content: prompt.prompt,
+          sender: "user",
+        };
+        const response = {
+          id:
+            prompt.createdDate.length + prompt.response.length + Math.random(),
+          content: prompt.response,
+          sender: "ai",
+        };
+        allMessages = [...allMessages, prompt1, response];
+      });
+
+    setMessages([...allMessages]);
+  }, [prompts]); // Add prompts to the dependency array
 
   useEffect(() => {
     let newConnection: signalR.HubConnection | null = null;
@@ -182,14 +216,14 @@ const ChatContainer = () => {
     ));
   };
 
-  return metaDataIsPending ? (
+  return metaDataIsPending || promptsIsPending ? (
     <div className="grid place-content-center ">
       <Spinner className="!w-7 !h-7 !border-[3px] " />
     </div>
   ) : (
     <div className=" border bg-background rounded-lg flex flex-col">
       <div className="flex-1 overflow-hidden">
-        <ChatMessageList className="overflow-y-scroll max-h-[70vh]">
+        <ChatMessageList className="overflow-y-scroll max-h-[63vh]">
           {messages.map((message) => (
             <ChatBubble
               key={message.id}

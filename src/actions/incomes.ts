@@ -34,6 +34,18 @@ type MetadataResponse = {
   data: MetadataItem;
   success: boolean;
 };
+interface Prompt {
+  prompt: string;
+  response: string;
+  createdDate: string; // ISO date string
+}
+
+export interface PromptResponse {
+  createdDate: string; // ISO date string
+  prompts: Prompt[];
+}
+
+export type PromptResponseList = PromptResponse[];
 export const fetchMetadata = async (): Promise<MetadataResponse> => {
   const cookieStore = await cookies();
   try {
@@ -58,6 +70,21 @@ export const fetchMetadata = async (): Promise<MetadataResponse> => {
     };
     console.error("Error fetching data:", error);
     return enhancedError;
+  }
+};
+export const fetchPromptHistory = async (): Promise<PromptResponseList> => {
+  const cookieStore = await cookies();
+  try {
+    // /api/users/{userId}/prompt-history
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/users/` +
+        cookieStore.get(COOKIES_KEYS.ESREFLY_USER_ID)?.value +
+        "/prompt-history"
+    );
+    console.log("🔥✨ response.data metadata", response.data);
+    return response.data;
+  } catch (e) {
+    throw (e as AxiosError).response?.data || (e as Error).message;
   }
 };
 
